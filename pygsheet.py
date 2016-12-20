@@ -32,17 +32,24 @@ class DriveWriter:
         self.service.spreadsheets().values().update(spreadsheetId=self.spreadsheetId,
             range=self.format_range(sheet, sheet_range), body={'values': data}, valueInputOption='USER_ENTERED').execute()
 
-    def read_data_in_range(self, sheet, sheet_range=None):
+    def read_data_in_range(self, sheet, sheet_range=None, omit_empty=False):
         """This function read from a sheet
         Args:
             sheet (str): Sheet name.
             sheet_range (:obj: `tuple` of :obj:`tuple` of :obj: `int`, optional): A tuple with two coordinates which delimitate a sheet range for read, all sheet by default.
             sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
+            omit_empty (bool, optional): True if you want to retrieve empty cells as None.
         Returns:
             list: Data stored in sheet's specified range.
         """
-        self.service.spreadsheets().values().get(spreadsheetId=self.spreadsheetId,
-            range=self.format_range(sheet, sheet_range)).execute()
+        response = self.service.spreadsheets().values().get(spreadsheetId=self.spreadsheetId,
+            range=self.format_range(sheet, sheet_range), valueRenderOption='UNFORMATTED_VALUE').execute()
+        if 'values' in response and not omit_empty:
+            return [val[0] if len(val) == 1 else {0: None}.get(len(val), val) for val in response['values']]
+        elif 'values' in response and omit_empty:
+            return [val[0] if len(val) == 1 else val for val in response['values'] if len(val) > 0]
+        else:
+            return []
 
     def append_data(self, data, sheet):
         """This function appends data to a specified sheet
@@ -219,7 +226,7 @@ class DriveWriter:
                 result[:0] = LETTERS[rem]
             return ''.join(result) + str(row)
 
-        formated = sheet
+        formated = "'" + sheet + "'"
         if sheet_range:
             if isinstance(sheet_range, list):
                 pass
@@ -244,3 +251,4 @@ class CellFormat:
 class GradientFormat:
     def __init__(self, init, mid, end, init_col, mid_col, end_col, interpolation_type):
         pass
+    
