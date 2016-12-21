@@ -5,13 +5,17 @@ from webcolors import name_to_rgb
 class DriveWriter:
     """Utility class ad hoc for drive spreadsheets interaction
      """
-    def __init__(self, spreadsheetId, app_name):
+    def __init__(self, app_name, spreadsheetId=None, with_pipeline=False):
         """Class parameters
         Args:
             spreadsheetId (str): id of spreadsheet (For: https://docs.google.com/spreadsheets/d/<spreadsheetId>/).
             app_name (str): Just a name for class instance.
         """
-        self.spreadsheetId = spreadsheetId
+        self.spreadsheetId = None
+        if spreadsheetId:
+            self.spreadsheetId = spreadsheetId
+        else:
+            self.create_spreadsheet(app_name)
         self.app_name = app_name
         self.flags = None
         try:
@@ -20,6 +24,9 @@ class DriveWriter:
         except ImportError:
             self.flags = None
         self.service = self.get_service()
+        self.with_pipeline = with_pipeline
+        if self.with_pipeline:
+            self.pipeline = []
 
     def write_data_in_range(self, data, sheet, sheet_range=None):
         """This function write into a sheet a specified data list
@@ -29,8 +36,12 @@ class DriveWriter:
             sheet_range (:obj: `tuple` of :obj:`tuple` of :obj: `int`, optional): A tuple with two coordinates which delimitate a sheet range for write, all sheet by default.
             sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
         """
-        self.service.spreadsheets().values().update(spreadsheetId=self.spreadsheetId,
-            range=self.format_range(sheet, sheet_range), body={'values': data}, valueInputOption='USER_ENTERED').execute()
+        range_formated = self.format_range(sheet, sheet_range)
+        if self.with_pipeline:
+            self.pipeline.append(("values", (range_formated, {'values': data})))
+        else:
+            self.service.spreadsheets().values().update(spreadsheetId=self.spreadsheetId,
+                range=range_formated, body={'values': data}, valueInputOption='USER_ENTERED').execute()
 
     def read_data_in_range(self, sheet, sheet_range=None, omit_empty=False):
         """This function read from a sheet
@@ -84,16 +95,25 @@ class DriveWriter:
             bottom(bool, optional): True in case you want to modify a cell's bottom, otherwise False. True by default.
             inner_horizontal(bool, optional): True in case you want to modify a cell's inner_horizontal, otherwise False. True by default.
         """
-        pass
+        data = {}
+        self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=data).execute()
 
     def create_spreadsheet(self, title):
          """This function creates a new spreadsheet and asign it to current 'spreadsheetless' class for futher work.
         Args:
             title (str): Name of spreadsheet
         """
-        pass
+        data = {
+            "properties": {
+                "title": title,
+                "locale": 'es',
+                "timeZone": 'GMT+01:00'
+                }
+        }
+        request = self.service.spreadsheets().create(body=data).execute()
+        self.spreadsheetId = request["spreadsheetId"]
 
-    def create_sheet(self, title, index, rows=1000, cols=1000, froz_rows=0, froz_cols=0, hid_grid=False, hidden_sheet=False, tab_color=None):
+    def create_sheet(self, title, index=None, rows=1000, cols=1000, froz_rows=0, froz_cols=0, hid_grid=False, hidden_sheet=False, tab_color=None):
         """This function appends a sheet to a spreadsheet.
         Args:
             title (str): Sheet name.
@@ -106,7 +126,36 @@ class DriveWriter:
             hidden_sheet (bool, optional): True if you want to create a hidden sheet.
             tab_color (:obj: `tuple` of :obj: 'float', optional): Change background color of sheet's tab.
         """
-        pass
+        data = {
+            "addSheet": {
+                "properties": {
+                    "title": title,
+                    "gridProperties": {
+                        "columnCount": cols,
+                        "rowCount": rows,
+                        "frozenColumnCount": froz_cols,
+                        "frozenRowCount": froz_rows,
+                        "hideGridlines": hid_grid
+                    },
+                    "hidden": hidden_sheet
+                }
+            }
+        }
+
+        if index:
+            data["addSheet"]["properties"]["index"] = index
+
+        if tab_color:
+            data["addSheet"]["properties"]["tabColor"] = {
+                "red": tab_color[0],
+                "green": tab_color[1],
+                "blue": tab_color[2],
+                "alpha": 0.9
+            }
+
+        sheet_id = len(self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId).execute()["sheets"])
+        data["addSheet"]["properties"]["sheetId"] = sheet_id
+        self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
 
     def cell_format(self, sheet, background=name_to_rgb('white'), h_alignment=None, v_alignment=None, top_padding=None, right_padding=None, bottom_padding=None, left_padding=None, sheet_range=None):
         """This function changes cell's format
@@ -238,6 +287,16 @@ class DriveWriter:
                 formated += '!' + sheet_range
         return formated
 
+    def create_request_body(self, data):
+        body = {
+            "requests": [data],
+            "includeSpreadsheetInResponse": False,
+            "responseIncludeGridData": False,
+        }
+
+    def execute_pipeline(self):
+        pass
+
 
 
 class TextFormat:
@@ -251,4 +310,4 @@ class CellFormat:
 class GradientFormat:
     def __init__(self, init, mid, end, init_col, mid_col, end_col, interpolation_type):
         pass
-    
+
