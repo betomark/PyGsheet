@@ -81,7 +81,7 @@ class DriveWriter:
         self.service.spreadsheets().values().clear(spreadsheetId=self.spreadsheetId,
             range=self.format_range(sheet, sheet_range), body={}).execute()
 
-    def update_borders(self, sheet, style, width, color=name_to_rgb('black'), sheet_range=None, top=True, bottom=True, inner_horizontal=True):
+    def update_borders(self, sheet, style, width, color=name_to_rgb('black'), alpha=None, sheet_range=None, top=True, bottom=True, left=True, right=True, inner_horizontal=True, inner_vertical=True):
         """This function changes borders style of a specified range
         Args:
             sheet (str): Sheet name.
@@ -95,8 +95,111 @@ class DriveWriter:
             bottom(bool, optional): True in case you want to modify a cell's bottom, otherwise False. True by default.
             inner_horizontal(bool, optional): True in case you want to modify a cell's inner_horizontal, otherwise False. True by default.
         """
-        data = {}
-        self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=data).execute()
+        sheet_id = self.get_sheet_id(sheet)
+        range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
+        data = {
+            "updateBorders": {
+                "range": {
+                    "sheetId": sheet_id,
+                }
+            }
+        }
+
+        if range_points[0][0]:
+            data["updateBorders"]["range"]["startColumnIndex"] = range_points[0][0]
+
+        if range_points[0][1]:
+            data["updateBorders"]["range"]["startRowIndex"] = range_points[0][0] + 1
+
+        if range_points[1][0]:
+            data["updateBorders"]["range"]["endColumnIndex"] = range_points[1][0]
+
+        if range_points[1][1]:
+            data["updateBorders"]["range"]["endRowIndex"] = range_points[1][0] + 1
+
+        if top:
+            data["updateBorders"]["top"] = {
+                    "color": {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    },
+                    "width": width,
+                    "style": style
+                }
+
+            if alpha:
+                 data["updateBorders"]["top"]["color"]["alpha"] = alpha
+
+        if bottom:
+            data["updateBorders"]["bottom"] = {
+                    "color": {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    },
+                    "width": width,
+                    "style": style
+                }
+            if alpha:
+                 data["updateBorders"]["bottom"]["color"]["alpha"] = alpha
+        if left:
+            data["updateBorders"]["left"] = {
+                    "color": {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    },
+                    "width": width,
+                    "style": style
+                }
+            if alpha:
+                 data["updateBorders"]["left"]["color"]["alpha"] = alpha
+
+        if right:
+            data["updateBorders"]["right"] = {
+                    "color": {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    },
+                    "width": width,
+                    "style": style
+                }
+            if alpha:
+                 data["updateBorders"]["right"]["color"]["alpha"] = alpha
+
+
+        if inner_horizontal:
+            data["updateBorders"]["innerHorizontal"] = {
+                    "color": {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    },
+                    "width": width,
+                    "style": style
+                }
+            if alpha:
+                 data["updateBorders"]["innerHorizontal"]["color"]["alpha"] = alpha
+
+        if inner_vertical:
+            data["updateBorders"]["innerVertical"] = {
+                    "color": {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    },
+                    "width": width,
+                    "style": style
+                }
+            if alpha:
+                 data["updateBorders"]["innerVertical"]["color"]["alpha"] = alpha
+
+        if self.with_pipeline:
+            self.pipeline.append(("batchUpdate", data))
+        else:
+            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
 
     def create_spreadsheet(self, title):
          """This function creates a new spreadsheet and asign it to current 'spreadsheetless' class for futher work.
