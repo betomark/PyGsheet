@@ -11,11 +11,14 @@ class DriveWriter:
             spreadsheetId (str): id of spreadsheet (For: https://docs.google.com/spreadsheets/d/<spreadsheetId>/).
             app_name (str): Just a name for class instance.
         """
+        self.service = self.get_service()
+
         self.spreadsheetId = None
         if spreadsheetId:
             self.spreadsheetId = spreadsheetId
         else:
             self.create_spreadsheet(app_name)
+
         self.app_name = app_name
         self.flags = None
         try:
@@ -23,7 +26,7 @@ class DriveWriter:
             self.flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
         except ImportError:
             self.flags = None
-        self.service = self.get_service()
+
         self.with_pipeline = with_pipeline
         if self.with_pipeline:
             self.pipeline = []
@@ -38,7 +41,8 @@ class DriveWriter:
         """
         range_formated = self.format_range(sheet, sheet_range)
         if self.with_pipeline:
-            self.pipeline.append(("values", (range_formated, {'values': data})))
+
+            self.pipeline.append(None)
         else:
             self.service.spreadsheets().values().update(spreadsheetId=self.spreadsheetId,
                 range=range_formated, body={'values': data}, valueInputOption='USER_ENTERED').execute()
@@ -202,7 +206,7 @@ class DriveWriter:
             self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
 
     def create_spreadsheet(self, title):
-         """This function creates a new spreadsheet and asign it to current 'spreadsheetless' class for futher work.
+        """This function creates a new spreadsheet and asign it to current 'spreadsheetless' class for futher work.
         Args:
             title (str): Name of spreadsheet
         """
