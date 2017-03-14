@@ -11,6 +11,7 @@ class DriveWriter:
             spreadsheetId (str): id of spreadsheet (For: https://docs.google.com/spreadsheets/d/<spreadsheetId>/).
             app_name (str): Just a name for class instance.
         """
+        self.app_name = app_name
         self.service = self.get_service()
 
         self.spreadsheetId = None
@@ -19,7 +20,6 @@ class DriveWriter:
         else:
             self.create_spreadsheet(app_name)
 
-        self.app_name = app_name
         self.flags = None
         try:
             import argparse
@@ -360,10 +360,13 @@ class DriveWriter:
         if not credentials or credentials.invalid:
             flow = client.flow_from_clientsecrets(cred_file, 'https://www.googleapis.com/auth/spreadsheets')
             flow.user_agent = self.app_name
-            if self.flags:
+            try:
                 credentials = tools.run_flow(flow, store, self.flags)
-            else:  # Needed only for compatibility with Python 2.6
-                credentials = tools.run(flow, store)
+            except:  # Needed only for compatibility with Python 2.6
+                try:
+                    credentials = tools.run_flow(flow, store)
+                except:
+                    credentials = tools.run(flow, store)
             print('Storing credentials to ' + credential_path)
         return credentials
 
