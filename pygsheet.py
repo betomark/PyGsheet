@@ -268,7 +268,7 @@ class DriveManager:
         else:
             self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
 
-    def cell_format(self, sheet, background=name_to_rgb('white'), h_alignment=None, v_alignment=None, top_padding=None, right_padding=None, bottom_padding=None, left_padding=None, sheet_range=None):
+    def cell_format(self, sheet, number_format=None, background=name_to_rgb('white'), h_alignment=None, v_alignment=None, top_padding=None, right_padding=None, bottom_padding=None, left_padding=None, sheet_range=None):
         """This function changes cell's format
         Args:
             sheet (str): Sheet name.
@@ -282,7 +282,70 @@ class DriveManager:
             sheet_range (:obj: `tuple` of :obj:`tuple` of :obj: `int`, optional): A tuple with two coordinates which delimitate a sheet range for delete it, all sheet by default.
             sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
         """
-        pass
+        sheet_id = self.get_sheet_id(sheet)
+        range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
+        
+        data = {
+            "UpdateCellsRequest": {
+                "rows": [],
+                "range": {"sheetId": sheet_id},
+            }
+        }
+            
+        if range_points[0][0]:
+            data["UpdateCellsRequest"]["range"]["startColumnIndex"] = range_points[0][0]
+
+        if range_points[0][1]:
+            data["UpdateCellsRequest"]["range"]["startRowIndex"] = range_points[0][0] + 1
+
+        if range_points[1][0]:
+            data["UpdateCellsRequest"]["range"]["endColumnIndex"] = range_points[1][0]
+
+        if range_points[1][1]:
+            data["UpdateCellsRequest"]["range"]["endRowIndex"] = range_points[1][0] + 1
+                
+        n_rows = range_points[1][1] - range_points[0][1] if range_points[1][1] and range_points[0][1] else 1
+        n_cols = range_points[1][0] - range_points[0][0] if range_points[1][0] and range_points[0][0] else 1
+                             
+        for i in range(n_rows):
+            row_data = {"values": []}
+
+            for j in range(n_cols):
+                cell_data = {
+                    "userEnteredFormat": {}
+                }
+                if number_format:
+                    cell_data["userEnteredFormat"]["numberFormat"]["type"] = number_format
+                
+                if background:
+                    cell_data["userEnteredFormat"]["backgroundColor"] = {
+                        "red": background[0],
+                        "green": background[1],
+                        "blue": background[2]
+                    }
+                if top_padding:
+                    cell_data["userEnteredFormat"]["padding"]["top"] = top_padding
+                if right_padding:
+                    cell_data["userEnteredFormat"]["padding"]["right"] = right_padding
+                if bottom_padding:
+                    cell_data["userEnteredFormat"]["padding"]["bottom"] = bottom_padding
+                if left_padding:
+                    cell_data["userEnteredFormat"]["padding"]["left"] = left_padding
+                if h_alignment:
+                    cell_data["userEnteredFormat"]["padding"]["horizontalAlignment"] = h_alignment
+                if v_alignment:
+                    cell_data["userEnteredFormat"]["padding"]["verticalAlignment"] = v_alignment
+                    
+                row_data["values"].append(cell_data)
+            
+            data["UpdateCellsRequest"]["rows"].append(row_data)
+            
+        if self.with_pipeline:
+            self.pipeline.append(("batchUpdate", data))
+        else:
+            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
+        
+       
 
     def text_format(self, sheet, color=name_to_rgb('black'), sheet_range=None, font='Comic Sans MS', size=None, bold=False, italic=False):
         """This function changes text's format
@@ -297,7 +360,62 @@ class DriveManager:
             bold (bool, optional): True if you want to bold it. False as default.
             italic (bool, optional): True if you want to italic it. False as default.
         """
-        pass
+         sheet_id = self.get_sheet_id(sheet)
+        range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
+        
+        data = {
+            "UpdateCellsRequest": {
+                "rows": [],
+                "range": {"sheetId": sheet_id},
+            }
+        }
+            
+        if range_points[0][0]:
+            data["UpdateCellsRequest"]["range"]["startColumnIndex"] = range_points[0][0]
+
+        if range_points[0][1]:
+            data["UpdateCellsRequest"]["range"]["startRowIndex"] = range_points[0][0] + 1
+
+        if range_points[1][0]:
+            data["UpdateCellsRequest"]["range"]["endColumnIndex"] = range_points[1][0]
+
+        if range_points[1][1]:
+            data["UpdateCellsRequest"]["range"]["endRowIndex"] = range_points[1][0] + 1
+                
+        n_rows = range_points[1][1] - range_points[0][1] if range_points[1][1] and range_points[0][1] else 1
+        n_cols = range_points[1][0] - range_points[0][0] if range_points[1][0] and range_points[0][0] else 1
+                             
+        for i in range(n_rows):
+            row_data = {"values": []}
+
+            for j in range(n_cols):
+                cell_data = {
+                    "userEnteredFormat": {"textFormat": {}}
+                }
+                if color:
+                    cell_data["userEnteredFormat"]["textFormat"]["foregroundColor"] = {
+                        "red": color[0],
+                        "green": color[1],
+                        "blue": color[2]
+                    }
+                if font:
+                     cell_data["userEnteredFormat"]["textFormat"]["fontFamily"] = font
+                if size:
+                    cell_data["userEnteredFormat"]["textFormat"]["fontSize"] = size
+                if bold:
+                    cell_data["userEnteredFormat"]["textFormat"]["bold"] = bold
+                if italic:
+                    cell_data["userEnteredFormat"]["textFormat"]["italic"] = italic
+                
+                    
+                row_data["values"].append(cell_data)
+            
+            data["UpdateCellsRequest"]["rows"].append(row_data)
+            
+        if self.with_pipeline:
+            self.pipeline.append(("batchUpdate", data))
+        else:
+            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
 
     def filter_view(self, sheet, id, title, condition_type, condition, sort_order=None, sheet_range=None):
         """
