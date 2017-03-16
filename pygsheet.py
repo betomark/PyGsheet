@@ -2,7 +2,7 @@
 from oauth2client import tools
 from webcolors import name_to_rgb
 
-class DriveWriter:
+class DriveManager:
     """Utility class ad hoc for drive spreadsheets interaction
      """
     def __init__(self, app_name, spreadsheetId=None, with_pipeline=False):
@@ -219,6 +219,7 @@ class DriveWriter:
         }
         request = self.service.spreadsheets().create(body=data).execute()
         self.spreadsheetId = request["spreadsheetId"]
+        return self.spreadsheetId
 
     def create_sheet(self, title, index=None, rows=1000, cols=1000, froz_rows=0, froz_cols=0, hid_grid=False, hidden_sheet=False, tab_color=None):
         """This function appends a sheet to a spreadsheet.
