@@ -360,7 +360,7 @@ class DriveManager:
             bold (bool, optional): True if you want to bold it. False as default.
             italic (bool, optional): True if you want to italic it. False as default.
         """
-         sheet_id = self.get_sheet_id(sheet)
+        sheet_id = self.get_sheet_id(sheet)
         range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
         
         data = {
