@@ -8,4 +8,10 @@ setup(name='pygsheet',
       author_email='almark16@gmail.com',
       license='GPL',
       packages=[],
+	  install_requires=[
+          'oauth2client',
+		  'webcolors',
+		  'httplib2',
+		  'google-api-python-client'
+      ],
       zip_safe=False)
