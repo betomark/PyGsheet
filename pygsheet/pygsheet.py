@@ -23,7 +23,7 @@ class SpreadsheetManager:
         self.flags = None
         try:
             import argparse
-            self.flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+            self.flags = argparse.ArgumentParser(parents=[tools.argparser], conflict_handler='resolve').parse_args()
         except ImportError:
             self.flags = None
 

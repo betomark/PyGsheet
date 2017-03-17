@@ -38,7 +38,7 @@ class DriveManager():
             flow.user_agent = self.app_name
             try:
                 import argparse
-                flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+                flags = argparse.ArgumentParser(parents=[tools.argparser], conflict_handler='resolve').parse_args()
             except ImportError:
                 flags = None
             try:
