@@ -68,13 +68,13 @@ class DriveManager():
         
         if user_list:
             for email in user_list:
-                batch.add(self.service.permissions().insert(
+                batch.add(self.service.permissions().create(
                     fileId=file_id,
                     body= {'type': 'user', 'role': 'writer', 'value': email},
                     fields='id',
                 ))
             if domain:
-                batch.add(self.service.permissions().insert(
+                batch.add(self.service.permissions().create(
                     fileId=file_id,
                     body={'type': 'domain', 'role': 'commenter', 'value': domain},
                     fields='id',
