@@ -545,6 +545,7 @@ class SpreadsheetManager:
             "includeSpreadsheetInResponse": False,
             "responseIncludeGridData": False,
         }
+        return body
 
     def execute_pipeline(self):
         pass
