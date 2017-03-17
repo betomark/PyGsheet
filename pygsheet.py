@@ -2,7 +2,7 @@
 from oauth2client import tools
 from webcolors import name_to_rgb
 
-class DriveManager:
+class SpreadsheetManager:
     """Utility class ad hoc for drive spreadsheets interaction
      """
     def __init__(self, app_name, spreadsheetId=None, with_pipeline=False):
@@ -463,6 +463,26 @@ class DriveManager:
             sheet (str): Sheet name.
         """
         pass
+    
+    def share_spreadsheet(self, domain=None, user_list=None):
+        """This function allow to share the spreadsheet to users or a domain 
+        Args:
+            domain (str): name of the domain which you want to share the spreadsheet, read permission only.
+            user_list (list): an email list for full spreadsheet sharing.
+        """
+        import drive_manager
+        manager = drive_manager.DriveManager(app_name=self.app_name)
+        if user_list:
+            if domain:
+                manager.share_file(self.spreadsheetId, domain, user_list)
+            else:
+                manager.share_file(self.spreadsheetId, user_list=user_list)
+        else:
+            if domain:
+                manager.share_file(self.spreadsheetId, domain=domain)
+            else:
+                raise AttributeError('You must specify a domain and/or email list')
+            
 
 
     def get_credentials(self, cred_file='client_secret.json'):
