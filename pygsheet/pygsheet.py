@@ -470,7 +470,7 @@ class SpreadsheetManager:
             domain (str): name of the domain which you want to share the spreadsheet, commenter permission only.
             user_list (list): an email list for full spreadsheet sharing.
         """
-        import drive_manager
+        from pygsheet import drive_manager
         manager = drive_manager.DriveManager(app_name=self.app_name)
         if user_list:
             if domain:
