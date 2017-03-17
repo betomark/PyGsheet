@@ -76,7 +76,7 @@ class DriveManager():
             if domain:
                 batch.add(self.service.permissions().insert(
                     fileId=file_id,
-                    body={'type': 'domain', 'role': 'reader', 'value': domain},
+                    body={'type': 'domain', 'role': 'commenter', 'value': domain},
                     fields='id',
                 ))
         

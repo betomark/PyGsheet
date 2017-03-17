@@ -467,7 +467,7 @@ class SpreadsheetManager:
     def share_spreadsheet(self, domain=None, user_list=None):
         """This function allow to share the spreadsheet to users or a domain 
         Args:
-            domain (str): name of the domain which you want to share the spreadsheet, read permission only.
+            domain (str): name of the domain which you want to share the spreadsheet, commenter permission only.
             user_list (list): an email list for full spreadsheet sharing.
         """
         import drive_manager
