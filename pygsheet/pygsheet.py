@@ -20,6 +20,9 @@ class SpreadsheetManager:
         else:
             self.create_spreadsheet(app_name)
 
+        self.sheets_id = self.get_sheets_id()
+
+        self.app_name = app_name
         self.flags = None
         try:
             import argparse
@@ -42,7 +45,7 @@ class SpreadsheetManager:
         range_formated = self.format_range(sheet, sheet_range)
         if self.with_pipeline:
 
-            self.pipeline.append(None)
+            self.pipeline.append(None)  # TODO: implementation
         else:
             self.service.spreadsheets().values().update(spreadsheetId=self.spreadsheetId,
                 range=range_formated, body={'values': data}, valueInputOption='USER_ENTERED').execute()
@@ -72,8 +75,38 @@ class SpreadsheetManager:
             data (:obj:`list` of :obj:`tuple` of :obj:`tuple`): data list which we want to write.
             sheet (str): Sheet name.
         """
+#        if self.with_pipeline:
+#            data_list = []
+#            for line in data:
+#                line_dict = {"values": []}
+#                for element in line:
+#
+#                    cell_data = {  # TODO: finish it
+#                        "userEnteredValue": {object(ExtendedValue)},
+#                        "effectiveValue": {object(ExtendedValue)},
+#                        "formattedValue": string,
+#                        "userEnteredFormat": {object(CellFormat)},
+#                        "effectiveFormat": {object(CellFormat)},
+#                        "hyperlink": string,
+#                        "note": string,
+#                        "textFormatRuns": [{object(TextFormatRun)}],
+#                        "dataValidation": {object(DataValidationRule)},
+#                        "pivotTable": {object(PivotTable)},
+#                    }
+#
+#                    line_dict["values"].append(cell_data)
+#                data_list.append(line_dict)
+#
+#            data = { "appendCells": {
+#                "sheetId": self.spreadsheetId,
+#                "rows": data_list,
+#                "fields": "*",
+#                }
+#            }
+#            self.pipeline.append(data)
+#        else:
         self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
-            range=sheet, body={'values': data}, valueInputOption='USER_ENTERED').execute()
+                range=sheet, body={'values': data}, valueInputOption='USER_ENTERED').execute()
 
     def delete_data(self, sheet, sheet_range=None):
         """This function delete a specified range from a sheet
@@ -201,7 +234,7 @@ class SpreadsheetManager:
                  data["updateBorders"]["innerVertical"]["color"]["alpha"] = alpha
 
         if self.with_pipeline:
-            self.pipeline.append(("batchUpdate", data))
+            self.pipeline.append(data)
         else:
             self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
 
@@ -264,9 +297,12 @@ class SpreadsheetManager:
         sheet_id = len(self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId).execute()["sheets"])
         data["addSheet"]["properties"]["sheetId"] = sheet_id
         if self.with_pipeline:
-            self.pipeline.append(("batchUpdate", data))
+            self.pipeline.append(data)
         else:
-            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
+            response = self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
+            if response:  # TODO: test it
+                self.sheets_id[title] = sheet_id
+
 
     def cell_format(self, sheet, number_format=None, background=name_to_rgb('white'), h_alignment=None, v_alignment=None, top_padding=None, right_padding=None, bottom_padding=None, left_padding=None, sheet_range=None):
         """This function changes cell's format
@@ -284,14 +320,14 @@ class SpreadsheetManager:
         """
         sheet_id = self.get_sheet_id(sheet)
         range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
-        
+
         data = {
             "UpdateCellsRequest": {
                 "rows": [],
                 "range": {"sheetId": sheet_id},
             }
         }
-            
+
         if range_points[0][0]:
             data["UpdateCellsRequest"]["range"]["startColumnIndex"] = range_points[0][0]
 
@@ -303,10 +339,10 @@ class SpreadsheetManager:
 
         if range_points[1][1]:
             data["UpdateCellsRequest"]["range"]["endRowIndex"] = range_points[1][0] + 1
-                
+
         n_rows = range_points[1][1] - range_points[0][1] if range_points[1][1] and range_points[0][1] else 1
         n_cols = range_points[1][0] - range_points[0][0] if range_points[1][0] and range_points[0][0] else 1
-                             
+
         for i in range(n_rows):
             row_data = {"values": []}
 
@@ -316,7 +352,7 @@ class SpreadsheetManager:
                 }
                 if number_format:
                     cell_data["userEnteredFormat"]["numberFormat"]["type"] = number_format
-                
+
                 if background:
                     cell_data["userEnteredFormat"]["backgroundColor"] = {
                         "red": background[0],
@@ -335,17 +371,16 @@ class SpreadsheetManager:
                     cell_data["userEnteredFormat"]["padding"]["horizontalAlignment"] = h_alignment
                 if v_alignment:
                     cell_data["userEnteredFormat"]["padding"]["verticalAlignment"] = v_alignment
-                    
+
                 row_data["values"].append(cell_data)
-            
+
             data["UpdateCellsRequest"]["rows"].append(row_data)
-            
+
         if self.with_pipeline:
             self.pipeline.append(("batchUpdate", data))
         else:
             self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
-        
-       
+
 
     def text_format(self, sheet, color=name_to_rgb('black'), sheet_range=None, font='Comic Sans MS', size=None, bold=False, italic=False):
         """This function changes text's format
@@ -362,14 +397,14 @@ class SpreadsheetManager:
         """
         sheet_id = self.get_sheet_id(sheet)
         range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
-        
+
         data = {
             "UpdateCellsRequest": {
                 "rows": [],
                 "range": {"sheetId": sheet_id},
             }
         }
-            
+
         if range_points[0][0]:
             data["UpdateCellsRequest"]["range"]["startColumnIndex"] = range_points[0][0]
 
@@ -381,10 +416,10 @@ class SpreadsheetManager:
 
         if range_points[1][1]:
             data["UpdateCellsRequest"]["range"]["endRowIndex"] = range_points[1][0] + 1
-                
+
         n_rows = range_points[1][1] - range_points[0][1] if range_points[1][1] and range_points[0][1] else 1
         n_cols = range_points[1][0] - range_points[0][0] if range_points[1][0] and range_points[0][0] else 1
-                             
+
         for i in range(n_rows):
             row_data = {"values": []}
 
@@ -406,12 +441,12 @@ class SpreadsheetManager:
                     cell_data["userEnteredFormat"]["textFormat"]["bold"] = bold
                 if italic:
                     cell_data["userEnteredFormat"]["textFormat"]["italic"] = italic
-                
-                    
+
+
                 row_data["values"].append(cell_data)
-            
+
             data["UpdateCellsRequest"]["rows"].append(row_data)
-            
+
         if self.with_pipeline:
             self.pipeline.append(("batchUpdate", data))
         else:
@@ -433,15 +468,27 @@ class SpreadsheetManager:
         pass
 
 
-    def protected_range(self, sheet, editors, sheet_range=None):
-        """This funtion allow to a specified set of users(using their emails) to edit a certain range.
-        Args:
-            sheet (str): Sheet name.
-            editors (:obj: `list` of :obj: `str`): List of user's emails who you want to conced edit permission.
-            sheet_range (:obj: `tuple` of :obj:`tuple` of :obj: `int`, optional): A tuple with two coordinates which delimitate a sheet range for delete it, all sheet by default.
-            sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
-        """
-        pass
+#    def protected_range(self, sheet, editors, protected_range=None, sheet_range=None):
+#        """This funtion allow to a specified set of users(using their emails) to edit a certain range.
+#        Args:
+#            sheet (str): Sheet name.
+#            editors (:obj: `list` of :obj: `str`): List of user's emails who you want to conced edit permission.
+#            sheet_range (:obj: `tuple` of :obj:`tuple` of :obj: `int`, optional): A tuple with two coordinates which delimitate a sheet range for delete it, all sheet by default.
+#            sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
+#        """
+#        request = {  # TODO: finish it
+#            "addProtectedRange": {object(AddProtectedRangeRequest)
+#            },
+#            "updateProtectedRange": {object(UpdateProtectedRangeRequest)
+#            },
+#            "deleteProtectedRange": {object(DeleteProtectedRangeRequest)
+#            }
+#        }
+#        if self.with_pipeline:
+#            self.pipeline.append(request)
+#        else:
+#            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(request)).execute()
+
 
     def conditional_format(self, sheet, condition_type, condition, text_format_class=None, cell_format_class=None, gradient_format_class=None, sheet_range=None):
         """This funtion set conditional format rule for a specified range in a sheet.
@@ -457,15 +504,57 @@ class SpreadsheetManager:
         """
         pass
 
-    def export_csv(self, sheet):
-        """This function allow to export a specified sheet as csv
-        Args:
-            sheet (str): Sheet name.
-        """
-        pass
-    
+#    def find_and_replace(self, find, replace, sheet_range=None, sheet=None,  case_sensitive=True, entire_cell=True, regrex=False, search_formula=False):
+#        request = {
+#            "findReplace": {
+#                "find": find,
+#                "replacement": replace,
+#                "matchCase": case_sensitive,
+#                "matchEntireCell": entire_cell,
+#                "searchByRegex": regrex,
+#                "includeFormulas": search_formula,
+#                "range": {  # TODO: finish it
+#                  "sheetId": number,
+#                  "startRowIndex": number,
+#                  "endRowIndex": number,
+#                  "startColumnIndex": number,
+#                  "endColumnIndex": number,
+#                }
+#            }
+#        }
+#        if sheet:
+#            request['findReplace']["sheetId"] = self.sheets_id[sheet]
+#        else:
+#            request['findReplace']["allSheets"] = True
+#
+#        if self.with_pipeline:
+#            self.pipeline.append(request)
+#        else:
+#            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(request)).execute()
+
+    def get_sheets_id(self):
+        spreadsheet = self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId)
+        return {sheet["properties"]["title"]: sheet["properties"]["sheetId"] for sheet in spreadsheet["sheets"]}
+
+#    def export_csv(self, sheet=None, file_name=None):
+#        """This function allow to export a specified sheet as csv
+#        Args:
+#            sheet (str): Sheet name.
+#        """
+#        if file_name:
+#            file = open(file_name + '.csv', 'w')
+#        else:
+#            from datetime import datetime
+#            file = open('pygsheet_export_at_' + str(datetime.now().isoformat))
+#
+#        if sheet:
+#            spreadsheet = [element for element in self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId)["sheets"] if sheet["properties"]["title"] == sheet][0]
+#
+#        else:
+
+
     def share_spreadsheet(self, domain=None, user_list=None):
-        """This function allow to share the spreadsheet to users or a domain 
+        """This function allow to share the spreadsheet to users or a domain
         Args:
             domain (str): name of the domain which you want to share the spreadsheet, commenter permission only.
             user_list (list): an email list for full spreadsheet sharing.
@@ -482,8 +571,6 @@ class SpreadsheetManager:
                 manager.share_file(self.spreadsheetId, domain=domain)
             else:
                 raise AttributeError('You must specify a domain and/or email list')
-            
-
 
     def get_credentials(self, cred_file='client_secret.json'):
         import os
@@ -540,15 +627,23 @@ class SpreadsheetManager:
         return formated
 
     def create_request_body(self, data):
-        body = {
-            "requests": [data],
-            "includeSpreadsheetInResponse": False,
-            "responseIncludeGridData": False,
-        }
+        if isinstance(data, list):
+            body = {
+                "requests": data,
+                "includeSpreadsheetInResponse": False,
+                "responseIncludeGridData": False,
+            }
+        else:
+            body = {
+                "requests": [data],
+                "includeSpreadsheetInResponse": False,
+                "responseIncludeGridData": False,
+            }
         return body
 
-    def execute_pipeline(self):
-        pass
+#    def execute_pipeline(self):
+#        response = self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(self.pipeline)).execute()
+#        if response and str(self.pipeline)
 
 
 
@@ -563,4 +658,3 @@ class CellFormat:
 class GradientFormat:
     def __init__(self, init, mid, end, init_col, mid_col, end_col, interpolation_type):
         pass
-
