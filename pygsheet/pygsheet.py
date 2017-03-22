@@ -132,7 +132,7 @@ class SpreadsheetManager:
             bottom(bool, optional): True in case you want to modify a cell's bottom, otherwise False. True by default.
             inner_horizontal(bool, optional): True in case you want to modify a cell's inner_horizontal, otherwise False. True by default.
         """
-        sheet_id = self.get_sheet_id(sheet)
+        sheet_id = self.get_sheets_id(sheet)
         range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
         data = {
             "updateBorders": {
@@ -328,7 +328,7 @@ class SpreadsheetManager:
             sheet_range (:obj: `tuple` of :obj:`tuple` of :obj: `int`, optional): A tuple with two coordinates which delimitate a sheet range for delete it, all sheet by default.
             sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
         """
-        sheet_id = self.get_sheet_id(sheet)
+        sheet_id = self.get_sheets_id(sheet)
         range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
 
         data = {
@@ -405,7 +405,7 @@ class SpreadsheetManager:
             bold (bool, optional): True if you want to bold it. False as default.
             italic (bool, optional): True if you want to italic it. False as default.
         """
-        sheet_id = self.get_sheet_id(sheet)
+        sheet_id = self.get_sheets_id(sheet)
         range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
 
         data = {
