@@ -294,7 +294,7 @@ class SpreadsheetManager:
                 "alpha": 0.9
             }
 
-        sheet_id = len(self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId).execute()["sheets"])
+        sheet_id = sorted([sheet["properties"]["sheetId"] for sheet in self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId).execute()["sheets"]])[-1] + 1
         data["addSheet"]["properties"]["sheetId"] = sheet_id
         if self.with_pipeline:
             self.pipeline.append(data)
