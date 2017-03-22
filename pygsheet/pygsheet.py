@@ -303,7 +303,17 @@ class SpreadsheetManager:
             if response:  # TODO: test it
                 self.sheets_id[title] = sheet_id
 
-
+    def delete_sheet(self, sheet):
+        data = {
+            "deleteSheet": {
+                "sheetId": self.get_sheet_id(sheet)
+            }
+        }
+        if self.with_pipeline:
+            self.pipeline.append(("batchUpdate", data))
+        else:
+            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(data)).execute()
+        
     def cell_format(self, sheet, number_format=None, background=name_to_rgb('white'), h_alignment=None, v_alignment=None, top_padding=None, right_padding=None, bottom_padding=None, left_padding=None, sheet_range=None):
         """This function changes cell's format
         Args:
