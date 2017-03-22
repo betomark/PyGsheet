@@ -542,9 +542,13 @@ class SpreadsheetManager:
 #        else:
 #            self.service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheetId, body=self.create_request_body(request)).execute()
 
-    def get_sheets_id(self):
-        spreadsheet = self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId)
-        return {sheet["properties"]["title"]: sheet["properties"]["sheetId"] for sheet in spreadsheet["sheets"]}
+    def get_sheets_id(self, sheet=None):
+        spreadsheet = self.service.spreadsheets().get(spreadsheetId=self.spreadsheetId).execute()
+        sheets_dic = {sheet["properties"]["title"]: sheet["properties"]["sheetId"] for sheet in spreadsheet["sheets"]}
+        if sheet:
+            return sheets_dic[sheet]
+        else:
+            return sheets_dic
 
 #    def export_csv(self, sheet=None, file_name=None):
 #        """This function allow to export a specified sheet as csv
