@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='pygsheet',
 
-    version='0.1.7b1',
+    version='0.1.11b1',
 
     description='Wrapper for Google sheets API',
     long_description=long_description,
