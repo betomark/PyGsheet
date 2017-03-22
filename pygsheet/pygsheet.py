@@ -306,7 +306,7 @@ class SpreadsheetManager:
     def delete_sheet(self, sheet):
         data = {
             "deleteSheet": {
-                "sheetId": self.get_sheet_id(sheet)
+                "sheetId": self.get_sheets_id(sheet)
             }
         }
         if self.with_pipeline:
