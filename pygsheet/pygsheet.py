@@ -329,7 +329,7 @@ class SpreadsheetManager:
             sheet_range (str, optional): Another implementation of sheet range which suports excel range format, all sheet by default.
         """
         sheet_id = self.get_sheets_id(sheet)
-        range_points = sheet_range if type(sheet_range, tuple) else self.get_range_points(sheet_range)
+        range_points = sheet_range if isinstance(sheet_range, tuple) else self.get_range_points(sheet_range)
 
         data = {
             "UpdateCellsRequest": {
