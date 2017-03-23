@@ -69,7 +69,7 @@ class SpreadsheetManager:
         else:
             return []
 
-    def append_data(self, data, sheet):
+    def append_data(self, data, sheet, value_input='USER_ENTERED'):
         """This function appends data to a specified sheet
         Args:
             data (:obj:`list` of :obj:`tuple` of :obj:`tuple`): data list which we want to write.
@@ -105,8 +105,12 @@ class SpreadsheetManager:
 #            }
 #            self.pipeline.append(data)
 #        else:
-        self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
-                range=sheet, body={'values': data}, valueInputOption='USER_ENTERED').execute()
+        if not value_input:
+            self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
+                range=sheet, body={'values': data}).execute()
+        else:
+            self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
+                    range=sheet, body={'values': data}, valueInputOption=value_input).execute()
 
     def delete_data(self, sheet, sheet_range=None):
         """This function delete a specified range from a sheet
@@ -639,6 +643,9 @@ class SpreadsheetManager:
             elif isinstance(sheet_range, str):
                 formated += '!' + sheet_range
         return formated
+    
+    def get_range_points(self, range):
+        pass  # TODO: finish it
 
     def create_request_body(self, data):
         if isinstance(data, list):
