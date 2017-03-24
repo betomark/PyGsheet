@@ -34,7 +34,7 @@ class SpreadsheetManager:
         if self.with_pipeline:
             self.pipeline = []
 
-    def write_data_in_range(self, data, sheet, sheet_range=None):
+    def write_data_in_range(self, data, sheet, sheet_range=None, value_input='USER_ENTERED'):
         """This function write into a sheet a specified data list
         Args:
             data (:obj:`list` of :obj:`tuple` of :obj:`tuple`): data list which we want to write.
@@ -48,7 +48,7 @@ class SpreadsheetManager:
             self.pipeline.append(None)  # TODO: implementation
         else:
             self.service.spreadsheets().values().update(spreadsheetId=self.spreadsheetId,
-                range=range_formated, body={'values': data}, valueInputOption='USER_ENTERED').execute()
+                range=range_formated, body={'values': data}, valueInputOption=value_input).execute()
 
     def read_data_in_range(self, sheet, sheet_range=None, omit_empty=False):
         """This function read from a sheet
@@ -105,12 +105,8 @@ class SpreadsheetManager:
 #            }
 #            self.pipeline.append(data)
 #        else:
-        if not value_input:
-            self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
-                range=sheet, body={'values': data}).execute()
-        else:
-            self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
-                    range=sheet, body={'values': data}, valueInputOption=value_input).execute()
+        self.service.spreadsheets().values().append(spreadsheetId=self.spreadsheetId,
+                range=sheet, body={'values': data}, valueInputOption=value_input).execute()
 
     def delete_data(self, sheet, sheet_range=None):
         """This function delete a specified range from a sheet
