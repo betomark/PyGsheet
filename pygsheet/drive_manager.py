@@ -84,3 +84,21 @@ class DriveManager():
         
     def update_sharing(self):
         pass
+    
+    def move_file_to_folder(self, file_id, folder_id, remove_parents=False, team_drives=True):
+        
+        if remove_parents:
+            file = self.service.files().get(fileId=file_id,
+                                         fields='parents').execute()
+            previous_parents = ",".join(file.get('parents'))
+            file = self.service.files().update(fileId=file_id,
+                                            addParents=folder_id,
+                                            removeParents=previous_parents,
+                                            fields='id, parents',
+                                            supportsTeamDrives=team_drives).execute()
+        else:
+            self.service.files().update(fileId=file_id,
+                                            addParents=folder_id,
+                                            fields='id, parents',
+                                            supportsTeamDrives=team_drives).execute()
+        
