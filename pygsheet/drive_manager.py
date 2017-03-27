@@ -9,7 +9,7 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 class DriveManager():
-    def __init__(self, secret_file='drive_client_secret.json', app_name='Drive API Python Quickstart'):
+    def __init__(self, secret_file='client_secret.json', app_name='Drive API Python Quickstart'):
         self.secret_file = secret_file
         self.app_name = app_name
         self.service = self.get_service()
@@ -29,7 +29,7 @@ class DriveManager():
         if not os.path.exists(credential_dir):
             os.makedirs(credential_dir)
         credential_path = os.path.join(credential_dir,
-                                       'drive-python-quickstart.json')
+                                       'python-quickstart.json')
     
         store = Storage(credential_path)
         credentials = store.get()
