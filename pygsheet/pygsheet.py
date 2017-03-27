@@ -33,6 +33,8 @@ class SpreadsheetManager:
         self.with_pipeline = with_pipeline
         if self.with_pipeline:
             self.pipeline = []
+            
+        self.drive_manager = None
 
     def write_data_in_range(self, data, sheet, sheet_range=None, value_input='USER_ENTERED'):
         """This function write into a sheet a specified data list
@@ -573,18 +575,32 @@ class SpreadsheetManager:
             domain (str): name of the domain which you want to share the spreadsheet, commenter permission only.
             user_list (list): an email list for full spreadsheet sharing.
         """
-        from pygsheet import drive_manager
-        manager = drive_manager.DriveManager(app_name=self.app_name)
+        if not self.drive_manager:
+            self.get_drive_manager()
+            
         if user_list:
             if domain:
-                manager.share_file(self.spreadsheetId, domain, user_list)
+                self.drive_manager.share_file(self.spreadsheetId, domain, user_list)
             else:
-                manager.share_file(self.spreadsheetId, user_list=user_list)
+                self.drive_manager.share_file(self.spreadsheetId, user_list=user_list)
         else:
             if domain:
-                manager.share_file(self.spreadsheetId, domain=domain)
+                self.drive_manager.share_file(self.spreadsheetId, domain=domain)
             else:
                 raise AttributeError('You must specify a domain and/or email list')
+                
+    def move_file_to_folder(self, file_id, folder_id, remove_parents=False):
+        if not self.drive_manager:
+            self.get_drive_manager()
+        if remove_parents:
+            self.drive_manager.move_file_to_folder(file_id, folder_id, remove_parents=True)
+        else:
+            self.drive_manager.move_file_to_folder(file_id, folder_id)
+        
+                
+    def get_drive_manager(self):
+        from pygsheet import drive_manager
+        self.drive_manager = drive_manager.DriveManager(app_name=self.app_name)
 
     def get_credentials(self, cred_file='client_secret.json'):
         import os
