@@ -34,7 +34,7 @@ class DriveManager():
         store = Storage(credential_path)
         credentials = store.get()
         if not credentials or credentials.invalid:
-            flow = client.flow_from_clientsecrets(self.secret_file, 'https://www.googleapis.com/auth/drive')
+            flow = client.flow_from_clientsecrets(self.secret_file, scope=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
             flow.user_agent = self.app_name
             try:
                 import argparse

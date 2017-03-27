@@ -598,7 +598,7 @@ class SpreadsheetManager:
         store = Storage(credential_path)
         credentials = store.get()
         if not credentials or credentials.invalid:
-            flow = client.flow_from_clientsecrets(cred_file, 'https://www.googleapis.com/auth/spreadsheets')
+            flow = client.flow_from_clientsecrets(cred_file, scope=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
             flow.user_agent = self.app_name
             try:
                 credentials = tools.run_flow(flow, store, self.flags)
