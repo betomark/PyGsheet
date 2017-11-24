@@ -9,28 +9,35 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 class DriveManager():
-    def __init__(self, secret_file='client_secret.json', app_name='Drive API Python Quickstart'):
+    def __init__(self, secret_file='client_secret.json', app_name='Drive API Python Quickstart', cred_path=None):
         self.secret_file = secret_file
         self.app_name = app_name
-        self.service = self.get_service()
-    
-    
-    def get_credentials(self):
+        self.service = self.get_service(cred_path=cred_path)
+
+
+    def get_credentials(self, cred_path):
         """Gets valid user credentials from storage.
-    
+
         If nothing has been stored, or if the stored credentials are invalid,
         the OAuth2 flow is completed to obtain the new credentials.
-    
+
         Returns:
             Credentials, the obtained credential.
         """
-        home_dir = os.path.expanduser('~')
-        credential_dir = os.path.join(home_dir, '.credentials')
-        if not os.path.exists(credential_dir):
-            os.makedirs(credential_dir)
+        if not cred_path:
+            home_dir = os.path.expanduser('~')
+            credential_dir = os.path.join(home_dir, '.credentials')
+            if not os.path.exists(credential_dir):
+                try:
+                    os.system("sudo mkdir {}".format(credential_dir))
+                except:
+                    os.umask(0)
+                    os.makedirs(credential_dir, mode=0o777)
+        else:
+            credential_dir = cred_path
         credential_path = os.path.join(credential_dir,
                                        'python-quickstart.json')
-    
+
         store = Storage(credential_path)
         credentials = store.get()
         if not credentials or credentials.invalid:
@@ -50,12 +57,12 @@ class DriveManager():
                     credentials = tools.run(flow, store)
             print('Storing credentials to ' + credential_path)
         return credentials
-    
-    def get_service(self):
-        credentials = self.get_credentials()
+
+    def get_service(self, cred_path=None):
+        credentials = self.get_credentials(cred_path=cred_path)
         http = credentials.authorize(httplib2.Http())
         return discovery.build('drive', 'v3', http=http)
-    
+
     def share_file(self, file_id, domain=None, user_list=None):
         def callback(request_id, response, exception):
             if exception:
@@ -63,9 +70,9 @@ class DriveManager():
                 print(exception)
             else:
                 print("Permission Id: %s" % response.get('id'))
-        
+
         batch = self.service.new_batch_http_request(callback=callback)
-        
+
         if user_list:
             for email in user_list:
                 batch.add(self.service.permissions().create(
@@ -79,14 +86,14 @@ class DriveManager():
                     body={'type': 'domain', 'role': 'commenter', 'domain': domain},
                     fields='id',
                 ))
-        
+
         batch.execute()
-        
+
     def update_sharing(self):
         pass
-    
+
     def move_file_to_folder(self, file_id, folder_id, remove_parents=False, team_drives=True):
-        
+
         if remove_parents:
             file = self.service.files().get(fileId=file_id,
                                          fields='parents').execute()
@@ -101,4 +108,13 @@ class DriveManager():
                                             addParents=folder_id,
                                             fields='id, parents',
                                             supportsTeamDrives=team_drives).execute()
-        
+
+    def copy_file(self, file_id, new_name=None, new_folder=None):
+        response = None
+        if new_name:
+            response = self.service.files().copy(fileId=file_id, body={'title': new_name}).execute()
+        else:
+            response = self.service.files().copy(fileId=file_id).execute()
+        if new_folder:
+            self.move_file_to_folder(response['id'], new_folder, remove_parents=True)
+
