@@ -109,19 +109,19 @@ class DriveManager():
                                             fields='id, parents',
                                             supportsTeamDrives=team_drives).execute()
 
-    def copy_file(self, file_id, new_name=None, new_folder=None, body=None):
+    def copy_file(self, file_id, new_name=None, new_folder=None, body=None, team_drives=True):
         response = None
         if new_name:
             if body:
                 body['name'] = new_name
             else:
                 body = {'name': new_name}
-            response = self.service.files().copy(fileId=file_id, body=body).execute()
+            response = self.service.files().copy(fileId=file_id, body=body, supportsTeamDrives=team_drives).execute()
         else:
             if body:
-                response = self.service.files().copy(fileId=file_id, body=body).execute()
+                response = self.service.files().copy(fileId=file_id, body=body, supportsTeamDrives=team_drives).execute()
             else:
-                response = self.service.files().copy(fileId=file_id).execute()
+                response = self.service.files().copy(fileId=file_id, supportsTeamDrives=team_drives).execute()
         if new_folder:
             self.move_file_to_folder(response['id'], new_folder, remove_parents=True)
         return response
