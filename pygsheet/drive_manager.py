@@ -112,7 +112,7 @@ class DriveManager():
     def copy_file(self, file_id, new_name=None, new_folder=None):
         response = None
         if new_name:
-            response = self.service.files().copy(fileId=file_id, body={'title': new_name}).execute()
+            response = self.service.files().copy(fileId=file_id, body={'name': new_name}).execute()
         else:
             response = self.service.files().copy(fileId=file_id).execute()
         if new_folder:
