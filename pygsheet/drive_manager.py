@@ -117,4 +117,4 @@ class DriveManager():
             response = self.service.files().copy(fileId=file_id).execute()
         if new_folder:
             self.move_file_to_folder(response['id'], new_folder, remove_parents=True)
-
+        return response
