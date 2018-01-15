@@ -143,6 +143,7 @@ class DriveManager():
         file_metadata = {
             'title': filename,
             'mimeType': mimes[mtype],
+            'name': filename
         }
         if folder:
             file_metadata['parents'] = [{'id': folder}]
