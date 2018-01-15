@@ -148,7 +148,7 @@ class DriveManager():
             file_metadata['parents'] = [{'id': folder}]
 
         file = MediaFileUpload(filename, mimetype=mimes[mtype])
-        response = self.service.files().insert(body=file_metadata,
+        response = self.service.files().create(body=file_metadata,
                                      media_body=file,
                                      fields='id',
                                      supportsTeamDrives=team_drives).execute()
