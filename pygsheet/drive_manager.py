@@ -4,6 +4,7 @@ import httplib2
 import os
 
 from apiclient import discovery
+from apiclient.http import MediaFileUpload
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
@@ -124,4 +125,31 @@ class DriveManager():
                 response = self.service.files().copy(fileId=file_id, supportsTeamDrives=team_drives).execute()
         if new_folder:
             self.move_file_to_folder(response['id'], new_folder, remove_parents=True)
+        return response
+
+    def upload_file(self, filename, mtype, folder=None, team_drives=True):
+        mimes= {
+                'ppt': 'application/vnd.mspowerpoint',
+                'pdf': 'application/pdf',
+                'gif': 'image/gif',
+                'png': 'image/png',
+                'jpeg': 'image/jpeg',
+                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'xls': 'application/vnd.ms-excel',
+                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            }
+
+        file_metadata = {
+            'title': filename,
+            'mimeType': mimes[mtype],
+        }
+        if folder:
+            file_metadata['parents'] = [{'id': folder}]
+
+        file = MediaFileUpload(filename, mimetype=mimes[mtype])
+        response = self.service.files().insert(body=file_metadata,
+                                     media_body=file,
+                                     fields='id',
+                                     supportsTeamDrives=team_drives).execute()
         return response
