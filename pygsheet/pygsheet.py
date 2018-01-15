@@ -5,14 +5,19 @@ from webcolors import name_to_rgb
 class SpreadsheetManager:
     """Utility class ad hoc for drive spreadsheets interaction
      """
-    def __init__(self, app_name, spreadsheetId=None, with_pipeline=False):
+    def __init__(self, app_name, spreadsheetId=None, with_pipeline=False, cred_path=None):
         """Class parameters
         Args:
             spreadsheetId (str): id of spreadsheet (For: https://docs.google.com/spreadsheets/d/<spreadsheetId>/).
             app_name (str): Just a name for class instance.
         """
         self.app_name = app_name
-        self.service = self.get_service()
+        self.cred_path = None
+        if cred_path:
+            self.service = self.get_service(cred_path)
+            self.cred_path = cred_path
+        else:
+            self.service = self.get_service()
 
         self.spreadsheetId = None
         if spreadsheetId:
@@ -589,32 +594,43 @@ class SpreadsheetManager:
             else:
                 raise AttributeError('You must specify a domain and/or email list')
                 
-    def move_file_to_folder(self, file_id, folder_id, remove_parents=False):
+    def move_file_to_folder(self, folder_id, remove_parents=False):
         if not self.drive_manager:
             self.get_drive_manager()
         if remove_parents:
-            self.drive_manager.move_file_to_folder(file_id, folder_id, remove_parents=True)
+            self.drive_manager.move_file_to_folder(self.spreadsheetId, folder_id, remove_parents=True)
         else:
-            self.drive_manager.move_file_to_folder(file_id, folder_id)
+            self.drive_manager.move_file_to_folder(self.spreadsheetId, folder_id)
         
                 
     def get_drive_manager(self):
         from pygsheet import drive_manager
-        self.drive_manager = drive_manager.DriveManager(app_name=self.app_name)
+        self.drive_manager = drive_manager.DriveManager(app_name=self.app_name, cred_path=self.cred_path)
 
-    def get_credentials(self, cred_file='client_secret.json'):
+    def get_credentials(self, cred_path, cred_file='client_secret.json'):
         import os
         from oauth2client.file import Storage
         from oauth2client import client
-        home_dir = os.path.expanduser('~')
-        credential_dir = os.path.join(home_dir, '.credentials')
-        if not os.path.exists(credential_dir):
-            os.makedirs(credential_dir)
+        if not cred_path:
+            home_dir = os.path.expanduser('~')
+            credential_dir = os.path.join(home_dir, '.credentials')
+            if not os.path.exists(credential_dir):
+                try: 
+                    os.system("sudo mkdir {}".format(credential_dir))
+                except:
+                    os.umask(0)
+                    os.makedirs(credential_dir, mode=0o777)
+        else:
+            credential_dir = cred_path
+        
         credential_path = os.path.join(credential_dir, 'python-quickstart.json')
         store = Storage(credential_path)
         credentials = store.get()
         if not credentials or credentials.invalid:
-            flow = client.flow_from_clientsecrets(cred_file, scope=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
+            if cred_path is None:
+                flow = client.flow_from_clientsecrets(cred_file, scope=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
+            else:
+                flow = client.flow_from_clientsecrets(cred_path + cred_file, scope=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
             flow.user_agent = self.app_name
             try:
                 credentials = tools.run_flow(flow, store, self.flags)
@@ -626,10 +642,10 @@ class SpreadsheetManager:
             print('Storing credentials to ' + credential_path)
         return credentials
 
-    def get_service(self):
+    def get_service(self, cred_path=None):
         import httplib2
         from apiclient import discovery
-        credentials = self.get_credentials()
+        credentials = self.get_credentials(cred_path=cred_path)
         http = credentials.authorize(httplib2.Http())
         discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
                         'version=v4')
