@@ -93,7 +93,7 @@ class DriveManager():
     def update_sharing(self):
         pass
 
-    def create_folder(self, name, parents=None):
+    def create_folder(self, name, parents=None, team_drives=True):
         file_metadata = {
             'name': name,
             'mimeType': 'application/vnd.google-apps.folder'
@@ -102,7 +102,7 @@ class DriveManager():
             if not isinstance(parents, list):
                 parents = [parents]
             file_metadata['parents'] = parents
-        self.service.files().create(body=file_metadata).execute()
+        self.service.files().create(body=file_metadata, supportsTeamDrives=team_drives).execute()
 
     def move_file_to_folder(self, file_id, folder_id, remove_parents=False, team_drives=True):
 
