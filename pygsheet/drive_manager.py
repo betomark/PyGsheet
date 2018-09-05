@@ -165,3 +165,44 @@ class DriveManager():
                                      fields='id',
                                      supportsTeamDrives=team_drives).execute()
         return response
+
+    def list_files(self, team_drive_id = None, team_drives=True, ):
+        files = []
+        corp ='teamDrive' if team_drives else 'user'
+        next_page = True
+        token = None
+        while next_page:
+            if team_drives:
+                if token:
+                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000, teamDriveId=team_drive_id).execute()
+                else:
+                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000, teamDriveId=team_drive_id, pageToken=token).execute()
+                for file in response['files']:
+                    files.append(file['id'])
+                if response["nextPageToken"]:
+                    token = response["nextPageToken"]
+                    continue
+                else:
+                    break
+            else:
+                if token:
+                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000).execute()
+                else:
+                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, pageSize=1000, pageToken=token).execute()
+                for file in response['files']:
+                    files.append(file['id'])
+                if response["nextPageToken"]:
+                    token = response["nextPageToken"]
+                    continue
+                else:
+                    break
+        return files
+
+    def list_team_drives(self,):
+        team_drives = []
+        response = self.service.teamdrives().list(pageSize=100).execute()
+        for team_drive in response["teamDrives"]:
+            team_drives.append(team_drive['id'])
+        return team_drives
+
+
