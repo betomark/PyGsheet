@@ -171,31 +171,31 @@ class DriveManager():
         corp ='teamDrive' if team_drives else 'user'
         next_page = True
         token = None
-        while next_page:
-            if team_drives:
-                if token:
-                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000, teamDriveId=team_drive_id).execute()
-                else:
-                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000, teamDriveId=team_drive_id, pageToken=token).execute()
-                for file in response['files']:
-                    files.append(file['id'])
-                if response["nextPageToken"]:
-                    token = response["nextPageToken"]
-                    continue
-                else:
-                    break
+#        while next_page:
+        if team_drives:
+            if token:
+                response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000, teamDriveId=team_drive_id).execute()
             else:
-                if token:
-                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000).execute()
-                else:
-                    response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, pageSize=1000, pageToken=token).execute()
-                for file in response['files']:
-                    files.append(file['id'])
-                if response["nextPageToken"]:
-                    token = response["nextPageToken"]
-                    continue
-                else:
-                    break
+                response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000, teamDriveId=team_drive_id, pageToken=token).execute()
+            for file in response['files']:
+                files.append(file['id'])
+            #if response["nextPageToken"]:
+    #                    token = response["nextPageToken"]
+    #                    continue
+    #                else:
+#                break
+        else:
+            if token:
+                response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, includeTeamDriveItems=team_drives, pageSize=1000).execute()
+            else:
+                response = self.service.files().list(corpora= corp, supportsTeamDrives=team_drives, pageSize=1000, pageToken=token).execute()
+            for file in response['files']:
+                files.append(file['id'])
+#            if response["nextPageToken"]:
+#                token = response["nextPageToken"]
+#                continue
+#            else:
+#                break
         return files
 
     def list_team_drives(self,):

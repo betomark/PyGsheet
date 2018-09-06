@@ -7,12 +7,14 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+
 setup(
     name='pygsheet',
 
-    version='0.1.19b21',
+    version='0.1.19b24',
 
-    description='Wrapper for Google sheets API',
+    description='Wrapper for Google sheets API and Drive API',
     long_description=long_description,
 
     url='https://github.com/betomark/PyGsheet',
