@@ -202,7 +202,7 @@ class DriveManager():
         team_drives = []
         response = self.service.teamdrives().list(pageSize=100).execute()
         for team_drive in response["teamDrives"]:
-            team_drives.append({'id':team_drive['id'], 'name': team_drive['id']})
+            team_drives.append({'id':team_drive['id'], 'name': team_drive['name']})
         return team_drives
 
 
