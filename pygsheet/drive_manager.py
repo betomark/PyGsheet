@@ -102,7 +102,7 @@ class DriveManager():
             if not isinstance(parents, list):
                 parents = [parents]
             file_metadata['parents'] = parents
-        self.service.files().create(body=file_metadata, supportsTeamDrives=team_drives).execute()
+        return self.service.files().create(body=file_metadata, supportsTeamDrives=team_drives).execute()
 
     def move_file_to_folder(self, file_id, folder_id, remove_parents=False, team_drives=True):
 
